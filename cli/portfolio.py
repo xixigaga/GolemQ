@@ -62,7 +62,7 @@ except:
     print('PLEASE run "pip install QUANTAXIS" before call GolemQ.cli.portfolio modules')
     pass
 
-from GolemQ.GQIndicator.indices import *
+from GolemQ.indices.indices import *
 from GolemQ.cli.show_number import (
     position,
 )
@@ -127,7 +127,8 @@ def portfolio_optimizer(rm='CVaR',
 
         # 收益率序列
         rets_jotion = data_day.add_func(kline_returns_func)
-        returns = pd.DataFrame(columns=codelist, index=data_day.data.index.get_level_values(level=0).unique())
+        returns = pd.DataFrame(columns=codelist, 
+                               index=sorted(data_day.data.index.get_level_values(level=0).unique()))
         for code in codelist:
             returns[code] = rets_jotion.loc[(slice(None), code), :].reset_index(level=[1], drop=True)
 
@@ -202,7 +203,8 @@ def portfolio_optimizer(rm='CVaR',
 
         ##print(frontier.T.head())
 
-        #ax = plf.plot_frontier_area(w_frontier=frontier, cmap="tab20", height=6,
+        #ax = plf.plot_frontier_area(w_frontier=frontier, cmap="tab20",
+        #height=6,
         #width=10, ax=None)
 
         #plt.show()

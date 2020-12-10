@@ -22,18 +22,67 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import QUANTAXIS as QA
 try:
     import QUANTAXIS as QA
 except:
-    print('PLEASE run "pip install QUANTAXIS" before call GolemQ.GQUtil.symbol modules')
+    print('PLEASE run "pip install QUANTAXIS" before call GolemQ.utils.symbol modules')
     pass
 
 from QUANTAXIS.QAUtil.QACode import (QA_util_code_tostr)
-from GolemQ.GQUtil.const import _const
+from GolemQ.utils.const import _const
     
 class EXCHANGE(_const):
     XSHG = 'XSHG'
     SSE = 'XSHG'
+    SH = 'XSHG'
+    XSHE = 'XSHE'
+    SZ = 'XSHE'
+    SZE = 'XSHE'
+
+
+def normalize_code(symbol, pre_close=None):
+    """
+    归一化证券代码
+
+    :param code 如000001
+    :return 证券代码的全称 如000001.XSHE
+    """
+    if (not isinstance(symbol, str)):
+        return symbol
+
+    if (symbol.startswith('sz') and (len(symbol) == 8)):
+        ret_normalize_code = '{}.{}'.format(symbol[2:8], EXCHANGE.SZ)
+    elif (symbol.startswith('sh') and (len(symbol) == 8)):
+        ret_normalize_code = '{}.{}'.format(symbol[2:8], EXCHANGE.SH)
+    elif (symbol.startswith('00') and (len(symbol) == 6)):
+        if ((pre_close is not None) and (pre_close > 2000)):
+            # 推断是上证指数
+            ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SH)
+        else:
+            ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SZ)
+    elif ((symbol.startswith('399') or symbol.startswith('159') or \
+        symbol.startswith('150')) and (len(symbol) == 6)):
+        ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SH)
+    elif ((len(symbol) == 6) and (symbol.startswith('399') or \
+        symbol.startswith('159') or symbol.startswith('150') or \
+        symbol.startswith('16') or symbol.startswith('184801') or \
+        symbol.startswith('201872'))):
+        ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SZ)
+    elif ((len(symbol) == 6) and (symbol.startswith('50') or \
+        symbol.startswith('51') or symbol.startswith('60') or \
+        symbol.startswith('688') or symbol.startswith('900') or \
+        (symbol == '751038'))):
+        ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SH)
+    elif ((len(symbol) == 6) and (symbol[:3] in ['000', '001', '002',
+                                                 '200', '300'])):
+        ret_normalize_code = '{}.{}'.format(symbol, EXCHANGE.SZ)
+    else:
+        print(symbol)
+        ret_normalize_code = symbol
+
+    return ret_normalize_code
+
 
 def is_stock_cn(code):
     """
@@ -53,7 +102,8 @@ def is_stock_cn(code):
                     code = try_split_codelist[1]
                 elif (try_split_codelist[1] == 'XSHG') and (len(try_split_codelist[0]) == 6):
                     code = try_split_codelist[0]
-                if (code[:5] in ["00000"]):
+                if (code[:5] in ["00000"]) or \
+                    (code[:3] in ["000"]):
                     return True, QA.MARKET_TYPE.INDEX_CN, 'SH', '上交所指数'
         if code.startswith('60') == True:
             return True, QA.MARKET_TYPE.STOCK_CN, 'SH', '上交所A股'
@@ -145,6 +195,69 @@ def is_cryptocurrency(code):
         return False, None, None, None
     
 
+def get_display_name_list(codepool):
+    """
+    将各种‘随意’写法的A股股票名称列表，转换为6位数字list标准规格，
+    可以是“,”斜杠，“，”，可以是“、”，或者其他类似全角或者半角符号分隔。
+    """
+    if (isinstance(codepool, str)):
+        codelist = [code.strip() for code in codepool.splitlines()]
+    elif (isinstance(codepool, list)):
+        codelist = codepool
+    else:
+        print(u'Unsolved stock_cn code/symbol string:{}'.format(codepool))
+
+    ret_displaynamelist = []
+    for display_name in codelist:
+        if (len(display_name) > 6):
+            try_split_codelist = display_name.split('/')
+            if (len(try_split_codelist) > 1):
+                ret_displaynamelist.extend(try_split_codelist)
+            elif (len(display_name.split(' ')) > 1):
+                try_split_codelist = display_name.split(' ')
+                ret_displaynamelist.extend(try_split_codelist)
+            elif (len(display_name.split('、')) > 1):
+                try_split_codelist = display_name.split('、')
+                ret_displaynamelist.extend(try_split_codelist)
+            elif (len(display_name.split('，')) > 1):
+                try_split_codelist = display_name.split('，')
+                ret_displaynamelist.extend(try_split_codelist)
+            elif (len(display_name.split(',')) > 1):
+                try_split_codelist = display_name.split(',')
+                ret_displaynamelist.extend(try_split_codelist)
+            elif (display_name.startswith('XSHE')) or \
+                (display_name.endswith('XSHE')):
+                ret_displaynamelist.append('{}.XSHE'.format(QA_util_code_tostr(display_name)))
+                pass
+            elif (display_name.startswith('XSHG')) or \
+                (display_name.endswith('XSHG')):
+                #Ztry_split_codelist = code.split('.')
+                ret_displaynamelist.append('{}.XSHG'.format(QA_util_code_tostr(display_name)))
+            else:
+                if (QA_util_code_tostr(display_name)):
+                    pass
+                print(u'Unsolved stock_cn code/symbol string:{}'.format(display_name))
+        else:
+            ret_displaynamelist.append(display_name)
+
+    # 去除空字符串
+    ret_displaynamelist = list(filter(None, ret_displaynamelist))
+
+    # 清除尾巴
+    ret_displaynamelist = [code.strip(',') for code in ret_displaynamelist]
+    ret_displaynamelist = [code.strip('\'') for code in ret_displaynamelist]
+
+    # 去除重复代码
+    ret_displaynamelist = list(set(ret_displaynamelist))
+
+    # 用中文名反查股票代码
+    stock_list = QA.QA_fetch_stock_list()
+    dict_stock_list = {stock['name'].replace(' ', ''):code for code, stock in stock_list.T.iteritems()}
+    ret_symbol_list = [dict_stock_list[display_name] for display_name in ret_displaynamelist]
+
+    return ret_displaynamelist, ret_symbol_list
+
+
 def get_codelist(codepool):
     """
     将各种‘随意’写法的A股股票代码列表，转换为6位数字list标准规格，
@@ -197,7 +310,9 @@ def get_codelist(codepool):
     # 清除尾巴
     ret_codelist = [code.strip(',') for code in ret_codelist]
     ret_codelist = [code.strip('\'') for code in ret_codelist]
-
+    ret_codelist = [code.strip('’') for code in ret_codelist]
+    ret_codelist = [code.strip('‘') for code in ret_codelist]
+    
     # 去除重复代码
     ret_codelist = list(set(ret_codelist))
 
@@ -252,3 +367,66 @@ def get_block_symbols(blockname, stock_cn_block=None):
         return blockset[blockname]
     else:
         return stock_cn_block.get_block(blockname).code
+
+
+def perpar_symbol_range(eval_range):
+    """
+    返回预设的标的合集
+    """
+    if (eval_range == 'all'):
+        codelist_candidate = QA.QA_fetch_stock_list()
+        if (len(codelist_candidate) > 0):
+            codelist_candidate = codelist_candidate[AKA.CODE].tolist()
+        else:
+            return False
+    elif (eval_range == 'etf'):
+        codelist_candidate = ['159995', '']
+    elif (eval_range == 'hs300'):
+        blockname = ['沪深300']
+        blockname = list(set(blockname))
+        codelist_candidate = QA.QA_fetch_stock_block_adv().get_block(blockname).code
+    elif (eval_range == 'test'):
+        codepool = ['600104', '300015', '600612', '300750',
+                '600585', '000651', '600436', '002475',
+                '600030', '300760', '000895', '600066',
+                '000661', '600887', '600352', '002352',
+                '000568', '002714', '002415', '002594',
+                '603713', '000858', '601138', '300122',
+                '002179', '601888', '002557', '600036',
+                '002271', '600298', '600276', '600547',
+                '300146', '600660', '600161', '601318',
+                '002050', '600900', '300498', '603515',
+                '002007', '600600', '300059', '601933',
+                '002258', '300715', '603899', '603444',
+                '600031', '000876', '600332', '601877',
+                '603288', '603520', '000333', '600563',
+                '603259', '603517', '600309', '002230',
+                '600009', '600519', '603486', '601100',
+                '300144', '000538', '600486', '002705',
+                '600570', '603129', '000963']
+        codelist_candidate = get_codelist(codepool)
+    else:
+        eval_range = 'blocks'
+        blockname = ['MSCI中国', 'MSCI成份', 'MSCI概念', '三网融合',
+                    '上证180', '上证380', '沪深300', '上证380', 
+                    '深证300', '上证50', '上证电信', '电信等权', 
+                    '上证100', '上证150', '沪深300', '中证100',
+                    '中证500', '全指消费', '中小板指', '创业板指',
+                    '综企指数', '1000可选', '国证食品', '深证可选',
+                    '深证消费', '深成消费', '中证酒', '中证白酒',
+                    '行业龙头', '白酒', '证券', '消费100', 
+                    '消费电子', '消费金融', '富时A50', '银行', 
+                    '中小银行', '证券', '军工', '白酒', '啤酒', 
+                    '医疗器械', '医疗器械服务', '医疗改革', '医药商业', 
+                    '医药电商', '中药', '消费100', '消费电子', 
+                    '消费金融', '黄金', '黄金概念', '4G5G', 
+                    '5G概念', '生态农业', '生物医药', '生物疫苗',
+                    '机场航运', '数字货币', '文化传媒']
+        blockname = list(set(blockname))
+        codelist_candidate = QA.QA_fetch_stock_block_adv().get_block(blockname).code
+        #codelist_candidate = [code for code in codelist_candidate if not
+        #code.startswith('300')]
+        print('批量评估板块成分股：{} Total:{}'.format(blockname, 
+                                                len(codelist_candidate)))
+
+    return codelist_candidate
