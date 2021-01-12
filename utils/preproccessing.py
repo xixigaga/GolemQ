@@ -45,8 +45,6 @@ def winsorize_quantile(factor, up, down):
     factor = np.where(factor > up_scale, up_scale, factor)
     factor = np.where(factor < down_scale, down_scale, factor)
     return factor
-    from scipy.stats.mstats import winsorize
-    sp.stats.mstats.winsorize(a, limits=None)
 
 
 def winsorize_med(factor):

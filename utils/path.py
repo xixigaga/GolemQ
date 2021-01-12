@@ -278,7 +278,7 @@ def export_csv_day(code, market_type=None, export_path='export'):
         print('{}没有数据'.format(code))
         pass
     elif (market_type == QA.MARKET_TYPE.INDEX_CN):
-        mkdirs(os.path.join(export_path, 'index'))
+        mkdirs(os.path.join(export_path, 'index')) #今日上涨家数，下跌家数
         data_day.data.drop(['date_stamp','down_count','up_count'], axis=1).to_csv(os.path.join(export_path, 'index', '{}.csv'.format(code)))
     elif (market_type == QA.MARKET_TYPE.STOCK_CN):
         mkdirs(os.path.join(export_path, 'stock'))

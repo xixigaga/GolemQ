@@ -438,7 +438,7 @@ docs/_build/
 # PyBuilder
 .pybuilder/
 target/
-
+test/mytest/
 # Jupyter Notebook
 .ipynb_checkpoints
 
