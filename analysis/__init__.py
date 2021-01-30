@@ -1,6 +1,4 @@
 # coding:utf-8
-# Author: 阿财（Rgveda@github）（4910163#qq.com）
-# Created date: 2020-02-27
 #
 # The MIT License (MIT)
 #
@@ -25,4 +23,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-

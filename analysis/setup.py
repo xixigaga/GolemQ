@@ -1,6 +1,4 @@
 # coding:utf-8
-# Author: 阿财（Rgveda@github）（4910163#qq.com）
-# Created date: 2020-02-27
 #
 # The MIT License (MIT)
 #
@@ -25,4 +23,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+# setup.py
+from distutils.core import setup, Extension
+from Cython.Build import cythonize
+import numpy
+setup(ext_modules = cythonize(Extension(
+    'regtree_cython',
+    compiler_directives={'language_level' : "3"},   # or "2" or "3str"
+    sources=['regtree_cython.pyx'],
+    language='c',
+    include_dirs=[numpy.get_include()],
+    library_dirs=[],
+    libraries=[],
+    extra_compile_args=[],
+    extra_link_args=[]
+)))
 
