@@ -26,7 +26,9 @@
 基于 QUANTAXIS 的 DataStruct.add_func 使用，也可以单独使用处理 Kline数据，基于技术指标，
 用常见技术指标处理 Kline 走势。
 """
-
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))
 import numpy as np
 import scipy.stats as scs
 import pandas as pd
@@ -51,18 +53,19 @@ except:
     print('PLEASE run "pip install QUANTAXIS" before call GolemQ.indices.indices modules')
     pass
 
-from GolemQ.indices.base import *
-from GolemQ.analysis.timeseries import *
-from GolemQ.signal.base import (
-    ATR_RSI_Stops_v2,
-    ATR_SuperTrend_cross_v2,
-    )
-from GolemQ.utils.parameter import (
+from indices.base import *
+from analysis.timeseries import *
+# from base import (
+#     ATR_RSI_Stops_cross,
+#     ATR_SuperTrend_cross,
+#     )
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
-    TREND_STATUS as ST
+    TREND_STATUS as ST,
+    FEATURES as FTR,
     )
-from GolemQ.portfolio.utils import (
+from portfolio.utils import (
     calc_onhold_returns_v2,
 )
 
@@ -983,6 +986,82 @@ def maxfactor_cross_func_pd(data):
 
     return MFT_CROSS
 
+def schaff_np(closep:np.ndarray,
+                       highp:np.ndarray,
+                       lowp:np.ndarray,) -> np.ndarray:
+    """
+    自创指标：MAXFACTOR
+    """
+    fast=23
+    slow=50
+    cycle=20
+    factor=0.5
+    close=closep
+    macdx=talib.EMA(close,fast)-talib.EMA(close,slow)
+    
+    v1=LLV(macdx,cycle)
+    v2=HHV(macdx,cycle)-v1
+    fk = np.where(v2>0, (macdx-v1)*100/v2, 0)
+    fk_1=fk.shift(1)
+    fk = np.where(v2>0, fk, fk_1)
+    fk_test = np.where(v2>0, (macdx-v1)*100/v2, fk_1) #test
+    # fk2']=indFrame.apply(lambda x: x['fk_1']+factor*(x[]),axis=1)
+    # fd=IFF(bar<=1,fk,fd(1)+factor*(fk-fd(1)))
+    fd=talib.EMA(fk,cycle)
+    v3=LLV(fd,cycle)
+    v4=HHV(fd,cycle)-v3
+    sk = np.where(v2>0, (fd-v1)*100/v2, 0)
+    # sk=indFrame.apply(lambda x:(x['fd']-x['v1'])/x['v2']*100 if x['v2']>0 else 0,axis=1)
+    sk_1=sk.shift(1)
+    sk = np.where(v4>0, (fd-v3)*100/v4, sk_1)
+    # sk=indFrame.apply(lambda x:(x['fd']-x['v3'])/x['v4']*100 if x['v4']>0 else x['sk_1'],axis=1)
+    sd=talib.EMA(sk,cycle)
+    sd_cross_dif = np.nan_to_num(np.r_[0, np.diff(sd)], nan=0)
+    mft_cross_jx = np.where((sd_cross_dif < 0) & (mft_cross_dif > 0), 1, 0)
+    mft_cross_sx = Timeline_duration(np.where((mft_flow < 0) & \
+                                                 (mft_cross_dif > 0), -1, 0))
+    # dif_tp_max, _ = find_peaks(sd)
+    # dif_tp_min, _ = find_peaks(-sd)
+
+    # indFrame.iloc[dif_tp_max, indFrame.columns.get_loc('sd_short')] = -1 
+    # indFrame.iloc[dif_tp_min, indFrame.columns.get_loc('sd_short')] = 1
+
+    return np.c_[rsi_c0,
+                 cci_c1,
+                 mft_c2,
+                 mft_delta_c3,
+                 mft_bselin_c4,
+                 mft_cross_c5,
+                 mft_cross_jx_c6,
+                 mft_cross_sx_c7,
+                 rsi_delta_c8,
+                 mft_trend_timing_lag_c9,]
+
+def Schaff_func(data):
+    """
+    自创指标：MAXFACTOR
+    A pd.DataFrame wrapper for function maxfactor_cross_np()
+    此函数只做 np.ndarray 到 pd.DataFrame 的封装，实际计算由
+    纯 numpy 完成，便于后期改为 Cython 或者 Numba@jit 优化运行速度。
+    """
+    ret_mft_cross = schaff_np(closep=data.close.values,
+                                       highp=data.high.values,
+                                       lowp=data.low.values,)
+    
+    MFT_CROSS = pd.DataFrame(ret_mft_cross,
+                             columns=[FLD.RSI,
+                                      FLD.CCI,
+                                      FLD.MAXFACTOR,
+                                      FLD.MAXFACTOR_DELTA,
+                                      FLD.MAXFACTOR_BASELINE,
+                                      FLD.MAXFACTOR_CROSS, 
+                                      FLD.MAXFACTOR_CROSS_JX, 
+                                      FLD.MAXFACTOR_CROSS_SX,
+                                      FLD.RSI_DELTA,
+                                      FLD.MAXFACTOR_TREND_TIMING_LAG,],
+                             index=data.index)
+
+    return MFT_CROSS
 
 def dual_cross_np(closep:np.ndarray,
                   highp:np.ndarray,
@@ -1595,7 +1674,7 @@ def ATR_Stopline_func(data, *args, **kwargs):
     else:
         features = None
 
-    rsi_ma, stop_line, ATR_StoplineTrend = ATR_RSI_Stops_v2(data, 27)
+    rsi_ma, stop_line, ATR_StoplineTrend = ATR_RSI_Stops(data, 27)
     ATR_Stopline_CROSS = pd.DataFrame(np.c_[ATR_StoplineTrend, 
                                             np.zeros(len(data)), 
                                             np.zeros(len(data)), 
@@ -1851,8 +1930,8 @@ def lineareg_cross_func(data, *args, **kwargs):
         indices = pd.concat([ma30_cross_func(data),
                              boll_cross_func(data),
                              macd_cross_v2_func(data, annual=annual),
-                             dual_cross_v2_func(data),
-                             maxfactor_cross_v2_func(data),
+                             dual_cross_func(data),
+                             maxfactor_cross_func(data),
                              QA_indicator_BIAS(data, 10, 20, 30),],
                             axis=1)
         indices = bias_cross_func(data, indices=indices)
@@ -1861,8 +1940,8 @@ def lineareg_cross_func(data, *args, **kwargs):
                              ma30_cross_func(data),
                              boll_cross_func(data),
                              macd_cross_v2_func(data, annual=annual),
-                             dual_cross_v2_func(data),
-                             maxfactor_cross_v2_func(data),
+                             dual_cross_func(data),
+                             maxfactor_cross_func(data),
                              QA_indicator_BIAS(data, 10, 20, 30),],
                             axis=1)
         indices = bias_cross_func(data, indices=indices)
@@ -2393,8 +2472,8 @@ def lineareg_band_cross_func(data, *args, **kwargs):
     #                                                                                  bar_ind=x),
     #                                               axis=1)
     #print(indices[FLD.LINEAREG_TREND_R4]>indices[FLD.LINEAREG_TREND_CROSS_JX])
-    #LINEAREG_TREND = indices_density_func(data, FLD.LINEAREG_TREND, indices)
-    #LINEAREG_BAND = indices_density_func(data, FLD.LINEAREG_BAND, indices)
+    LINEAREG_TREND = indices_density_func(data, FLD.LINEAREG_TREND, indices)
+    LINEAREG_BAND = indices_density_func(data, FLD.LINEAREG_BAND, indices)
 
     return indices
 

@@ -23,6 +23,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))
 import datetime
 from datetime import datetime as dt, timezone, timedelta
 import os
@@ -50,25 +53,25 @@ except:
     print('PLEASE run "pip install QUANTAXIS" before call GolemQ.fetch.kline modules')
     pass
 
-from GolemQ.utils.parameter import (
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
     TREND_STATUS as ST,
     FEATURES as FTR,
     )
 
-from GolemQ.utils.symbol import (
+from utils.symbol import (
     is_stock_cn, 
     is_furture_cn,
     is_cryptocurrency,
 )
-from GolemQ.fetch.StockCN_realtime import (
+from fetch.StockCN_realtime import (
     GQ_fetch_stock_day_realtime_adv,
     GQ_fetch_stock_min_realtime_adv,
     #GQ_fetch_index_day_realtime_adv,
     #GQ_fetch_index_min_realtime_adv,
 )
-from GolemQ.utils.path import (
+from utils.path import (
     mkdirs,
 )
 

@@ -1,3 +1,5 @@
+import numpy as np
+
 def strided_app(a, L, S):  
     '''
     Pandas rolling for numpy
@@ -27,4 +29,5 @@ def rolling_poly9(s:np.ndarray, w:int=252) -> np.ndarray:
         return y_fit_n
 
 # 用法示例
+val=[1,2,3,1,2,3,1,2,3,4,5,3,21,8,3,4,4]
 features['POLYNOMIAL9'] = rolling_poly9(features['HMA10'].values, 252)

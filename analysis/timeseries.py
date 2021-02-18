@@ -24,6 +24,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))
+
 import numpy as np
 import pandas as pd
 import numba as nb
@@ -46,7 +50,7 @@ try:
 except:
     print('PLEASE run "pip install QUANTAXIS" before call GolemQ.analysis.timeseries modules')
     pass
-from GolemQ.utils.parameter import (
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
     TREND_STATUS as ST

@@ -27,17 +27,18 @@
 import numpy as np
 import pandas as pd
 import empyrical
-#from PyEMD import EEMD, EMD, Visualisation
+from PyEMD import EEMD, EMD, Visualisation
 
-from GolemQ.analysis.timeseries import *
-from GolemQ.utils.parameter import (
+from analysis.timeseries import *
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
     TREND_STATUS as ST,
     FEATURES as FTR
 )
-from GolemQ.portfolio.utils import (
+from portfolio.utils import (
     calc_onhold_returns_v2,
+    calc_strategy_stats
 )
 
 
@@ -282,23 +283,23 @@ def calc_best_imf_periods(features, imfs, imfNo,
 
     return features
 
-    portfolio_briefs = pd.DataFrame(columns=['symbol',
-                                             'name',
-                                             'portfolio',
-                                             'sharpe',
-                                             'annual_return',
-                                             'max_drawdown',
-                                             'turnover_ratio'])
-    if (FTR.BEST_IMF1_TIMING_LAG in features.columns) and (FTR.BEST_IMF2_TIMING_LAG in features.columns):
-        wavelet_cross = np.where((features[FTR.BEST_IMF1_TIMING_LAG] + features[FTR.BEST_IMF2_TIMING_LAG]) > 0, 1, 0)
-        features[FTR.BOOST_IMF_TIMING_LAG] = wavelet_cross
-        portfolio_briefs = portfolio_briefs.append(calc_strategy_stats(symbol, 
-                                                                       display_name, 
-                                                                       'EEMD Boost', 
-                                                                       wavelet_cross, 
-                                                                       features), ignore_index=True)
-    else:
-        print('Code {}, {} EMD分析失败。\n'.format(symbol, display_name))
-        QA.QA_util_log_info('Code {}, {} EMD分析失败。\n'.format(symbol, display_name))
+    # portfolio_briefs = pd.DataFrame(columns=['symbol',
+    #                                          'name',
+    #                                          'portfolio',
+    #                                          'sharpe',
+    #                                          'annual_return',
+    #                                          'max_drawdown',
+    #                                          'turnover_ratio'])
+    # if (FTR.BEST_IMF1_TIMING_LAG in features.columns) and (FTR.BEST_IMF2_TIMING_LAG in features.columns):
+    #     wavelet_cross = np.where((features[FTR.BEST_IMF1_TIMING_LAG] + features[FTR.BEST_IMF2_TIMING_LAG]) > 0, 1, 0)
+    #     features[FTR.BOOST_IMF_TIMING_LAG] = wavelet_cross
+    #     portfolio_briefs = portfolio_briefs.append(calc_strategy_stats(symbol, 
+    #                                                                    display_name, 
+    #                                                                    'EEMD Boost', 
+    #                                                                    wavelet_cross, 
+    #                                                                    features), ignore_index=True)
+    # else:
+    #     print('Code {}, {} EMD分析失败。\n'.format(symbol, display_name))
+    #     QA.QA_util_log_info('Code {}, {} EMD分析失败。\n'.format(symbol, display_name))
 
 

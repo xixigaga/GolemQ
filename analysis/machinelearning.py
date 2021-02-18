@@ -26,7 +26,9 @@
 基于 QUANTAXIS 的 DataStruct.add_func 使用，也可以单独使用处理 Kline，
 使用机器学习算法统计分析走势
 """
-
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))
 import numpy as np
 import numba as nb
 
@@ -45,9 +47,9 @@ from sklearn import mixture
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LinearRegression
 
-from GolemQ.analysis.timeseries import *
-from GolemQ.indices.indices import *
-from GolemQ.utils.parameter import (
+from analysis.timeseries import *
+from indices.indices import *
+from utils.parameter import (
     AKA,
     INDICATOR_FIELD as FLD,
     TREND_STATUS as ST
@@ -92,7 +94,6 @@ def get_index_of_peaks(p:np.ndarray,
         idx[i] = yaxis_of_peaks[p[i]]
     return idx.astype(np.int32)
 
-
 def dpgmm_predict(data:pd.DataFrame, 
                   code=None,
                   indices:pd.DataFrame=None,) -> np.ndarray:
@@ -134,7 +135,7 @@ def dpgmm_predict(data:pd.DataFrame,
                                                                                         len(np.unique(ret_cluster_group))))
 
         # DPGMM 聚类
-        X, idx = features_formatter_k_means(closep)
+        X, idx = features_formatter_k_means(closep) #[i, closep[i], minP, maxP, low, high] 通过close价格扩展维度，用以标签训练
         dpgmm = mixture.BayesianGaussianMixture(n_components=min(len(closep) - 1, max(int(len(closep) / 10), 16)), 
                                                 max_iter=1000, 
                                                 covariance_type='spherical',
@@ -162,7 +163,6 @@ def dpgmm_predict(data:pd.DataFrame,
             sub_first = min(nextsub_first, nextsub_last)
             sub_last = max(nextsub_first, nextsub_last)
         # DPGMM 聚类分析完毕
-
     return ret_cluster_group
 
 
@@ -299,7 +299,7 @@ def ml_trend_func(data:pd.DataFrame,) -> pd.DataFrame:
                                                 code, 
                                                 len(ml_trend[ST.CLUSTER_GROUP].unique())))
 
-    macd_cross = lineareg_band_cross_func(data)
+    macd_cross = lineareg_band_cross_func(data) #扩展列，生成X变量
     
     # 下降趋势检测，再次价格回归。波浪下降趋势一定DEA下沉到零轴下方，
     # 所以依次扫描所有聚类，在时间轴的近端发现有DEA下沉到零轴下方，
@@ -373,7 +373,7 @@ def ml_trend_func(data:pd.DataFrame,) -> pd.DataFrame:
     ml_trend = ml_trend.drop([FLD.CLUSTER_GROUP_GAP,
                               FLD.CLUSTER_GROUP_TO,
                               FLD.CLUSTER_GROUP_BEFORE, 
-                              FLD.ZEN_TIDE_DENSITY_RETURNS], axis=1)
+                              ], axis=1)#FLD.ZEN_TIDE_DENSITY_RETURNS
 
     ret_ml_trend = pd.concat([macd_cross, 
                               ml_trend], axis=1)

@@ -30,7 +30,7 @@ except:
     pass
 
 from QUANTAXIS.QAUtil.QACode import (QA_util_code_tostr)
-from GolemQ.utils.const import _const
+from utils.const import _const
     
 class EXCHANGE(_const):
     XSHG = 'XSHG'

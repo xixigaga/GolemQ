@@ -28,11 +28,11 @@ from numba import vectorize, float64, jit as njit
 import scipy.stats as scs
 from datetime import datetime as dt, timezone, timedelta
 
-from GolemQ.analysis.timeseries import *
+from analysis.timeseries import *
 from QUANTAXIS.QAUtil.QADate_Adv import (QA_util_print_timestamp,)
 import pandas as pd
 import empyrical
-from GolemQ.utils.parameter import (
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
     TREND_STATUS as ST,

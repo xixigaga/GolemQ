@@ -25,7 +25,7 @@
 """
 这里定义的是一些常用常量
 """
-from GolemQ.utils.const import _const
+from utils.const import _const
 import sys
 
 class AKA(_const):

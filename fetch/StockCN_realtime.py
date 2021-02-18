@@ -37,7 +37,7 @@ except:
     pass
 
 try:
-    from GolemQ.utils.parameter import (
+    from utils.parameter import (
         AKA, 
         INDICATOR_FIELD as FLD, 
         TREND_STATUS as ST
@@ -69,7 +69,7 @@ from QUANTAXIS.QAUtil import (
     QASETTING,
     )
 client = QASETTING.client['QAREALTIME']
-from GolemQ.utils.symbol import (
+from utils.symbol import (
     normalize_code
 )
 

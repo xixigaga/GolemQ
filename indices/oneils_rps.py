@@ -30,7 +30,9 @@ RPS英文全称Relative Price Strength Rating，即股价相对强度，
 该指标是欧奈尔CANSLIM选股法则中的趋势分析，具有很强的实战指导意义。
 RPS指标是指在一段时间内，个股涨幅在全部股票涨幅排名中的位次值。
 """
-
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))
 import datetime
 import numpy as np
 import pandas as pd
@@ -57,18 +59,18 @@ except:
     print('PLEASE run "pip install QUANTAXIS" before call GolemQ.indices.oneils_rps modules')
     pass
 
-from GolemQ.utils.parameter import (
+from utils.parameter import (
     AKA, 
     INDICATOR_FIELD as FLD, 
     TREND_STATUS as ST
 )
-from GolemQ.indices.indices import (
+from indices.indices import (
     lineareg_cross_func,
     boll_cross_drawdown,
     combo_flow_cross,
     risk_free_baseline_func,
 )
-from GolemQ.analysis.timeseries import (
+from analysis.timeseries import (
     Timeline_duration,
     Timeline_Integral,
 )
@@ -888,18 +890,9 @@ if __name__ == '__main__':
     pd.set_option("display.max_rows", 160)
     pd.set_option('display.width', 180)  # 设置打印宽度
 
-    etflist = ['159919', '159997', '159805', '159987', 
-               '159952', '159920', '518880', '159934', 
-               '159985', '515050', '159994', '159941', 
-               '512800', '515000', '512170', '512980', 
-               '510300', '513100', '510900', '512690', 
-               '510050', '159916', '512910', '510310', 
-               '512090', '513050', '513030', '513500', 
-               '159905', '159949', '510330', '510500', 
-               '510180', '159915', '510810', '159901', 
-               '512710', '510850', '512500', '512000',]
+    etflist = ['000001', '600519']
 
-    from GolemQ.fetch.kline import (
+    from fetch.kline import (
         get_kline_price,
     )
 
